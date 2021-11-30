@@ -1,8 +1,12 @@
 import cv2
 import time
 from playsound import playsound
-cap = cv2.VideoCapture(0)
 
+def shoot(x,y):
+    if x == 0 and y == 0:
+        return
+    print(f'shoot at {x},{y}')
+    playsound('gun.wav')
 
 def detect_motion(frame, frames):
     delta = cv2.absdiff(frames[0], frames[1])
@@ -12,14 +16,17 @@ def detect_motion(frame, frames):
     contours, _ = cv2.findContours(dilated_threshold.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
-        if cv2.contourArea(contour) < 2000:
+        if cv2.contourArea(contour) < 500:
+            
             continue
         (x,y,w,h) = cv2.boundingRect(contour)
+        shoot(x,y)
         cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),3)
     
     return frame
 
-def cam_loop():
+def cam_loop(cap):
+    
     frames = []
     end_time = time.time() + 5
     while time.time() < end_time:
@@ -36,14 +43,19 @@ def cam_loop():
         frames = frames[-2:]
         
         if cv2.waitKey(1) == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
             break
-    cap.release()
-    cv2.destroyAllWindows()
+    
 
-def game_loop():
+def game_loop(cap):
     while True:
         playsound('audio.wav')
-        cam_loop()
+        cam_loop(cap)
+
+    
     
 if __name__ == "__main__":
-    game_loop()
+    cap = cv2.VideoCapture(0)
+    game_loop(cap)
+    
